@@ -3,4 +3,14 @@ kind: PersistentVolumeClaim
 metadata:
   name: fast-api-claim
 spec:
+  selector:
+    matchLabels:
+      namespace: diogoneiss
+  storageClassName: default-storage-class-diogoneiss
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+        storage: 1Gi
+
  

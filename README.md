@@ -1,6 +1,13 @@
 # Tutorial source for building FastAPI application and deploying it to Kubernetes
 Video: https://www.youtube.com/watch?v=XltFOyGanYE
 
+
+## Useful commands
+docker build -t diogoneiss/cloud-computing:teste1 .  
+
+docker push diogoneiss/cloud-computing:teste1   
+
+
 ## Python Application
 
 ### Create a virtual environment:
@@ -13,6 +20,7 @@ source ./venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
+
 
 ### Start the App
 ```bash
