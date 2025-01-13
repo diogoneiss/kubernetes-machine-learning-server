@@ -34,9 +34,9 @@ spec:
           - name: VERSION
             value: "V1.0"
           - name: BASE_DIR
-            value: /api-data
+            value: /api-data/
           - name: PICKLE_DIR
-            value: /pickles
+            value: pickles/
           - name: RECOMMENDATIONS_FILE
             value: recommendations.pickle
           - name: BEST_TRACKS_FILE
