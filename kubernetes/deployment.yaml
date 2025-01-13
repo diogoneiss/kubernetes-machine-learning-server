@@ -48,7 +48,7 @@ spec:
           - name: POLLING_WAIT_IN_MINUTES
             value: "5"
           - name: CACHE_BUSTER
-            value: "1"
+            value: "2"
       volumes:
         - name: api-volume
           persistentVolumeClaim:
