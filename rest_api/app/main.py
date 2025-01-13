@@ -1,3 +1,4 @@
+import asyncio
 import pathlib
 import pickle
 import random
@@ -7,10 +8,11 @@ from contextlib import asynccontextmanager
 from typing import List, Annotated
 from dotenv import load_dotenv
 from pydantic import BaseModel
-from fastapi import FastAPI, HTTPException, Body
-from fastapi.responses import RedirectResponse
+from fastapi import FastAPI, HTTPException, Body, Request
+from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi_utils.tasks import repeat_every
-
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 import os
 
 import logging
@@ -142,13 +144,22 @@ app = FastAPI(
 
 )
 
+# list all files in the current directory
+print("Files in current directory: ", os.listdir())
+
+app.mount("/static", StaticFiles(directory="./rest_api/static"), name="static")
+
+
+templates = Jinja2Templates(directory="./rest_api/templates")
+
 app.reload_counter = 0
 app.cache_value = None
 app.finished_loading = False
 app.recommendations = None
 app.best_tracks = None
+app.sample_songs = None
 
-@app.get("/", tags=["util"])
+@app.get("/test", tags=["util"])
 def read_root():
     response = RedirectResponse(url='/docs#/recommend/get_recommendations_api_recommend__post')
     return response
@@ -182,17 +193,27 @@ def get_recommendations(request: Annotated[SongRequest, openApiBody]):
     recommended_songs = recommend_tracks_for_track(request.songs)
 
     return {
-        "_inputSongs": request.songs,
         "songs": recommended_songs,
         "model_date": app.cache_value,
         "version": VERSION
     }
 
-# @app.post("/api/reload-data", tags=["util"])
-# def reload_cache():
-#     perform_data_reload()
-#     return {"status": "Data reloaded"}
 
+@app.get("/", response_class=HTMLResponse)
+async def render_client(request: Request):
+    if app.best_tracks is None:
+        #sleep for 2 second
+        await asyncio.sleep(2)
+    # random string as hash
+    random_song = random.choice(app.best_tracks)
+    logger.info("Random song as seed for test is", random_song)
+    seed_tracks = [random_song["track_name"]]
+
+    tracks = perform_static_recommendation(seed_tracks)
+
+    return templates.TemplateResponse(
+        request=request, name="client.html", context={"tracks": tracks}
+    )
 
 def perform_static_recommendation(seed_tracks: list[str]):
     # tracks in deterministic order

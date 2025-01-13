@@ -43,7 +43,8 @@ DROP_COLUMNS = ["duration_ms"]
 FP_GROWTH_DROP_COLUMNS = ["track_uri", "album_name", "artist_uri"]
 
 sample_ratio = 1
-best_n_tracks = 5
+
+TOP_TRACKS_SAVE_PERCENTILE = float(os.getenv("TOP_TRACKS_SAVE_PERCENTILE", 0.03))
 
 total_songs = None
 
@@ -102,7 +103,7 @@ def extract_repeated_track_names(df):
         track_names_to_repeated_uris[track_name] = track_uris
 
     if duplicate_songs.shape[0] > 0:
-        msg = f"Found {duplicate_songs.shape[0]} duplicate songs, saving to {PICKLE_DUPLICATED_TRACKS}"
+        msg = f"\tFound {duplicate_songs.shape[0]} duplicate songs, saving to {PICKLE_DUPLICATED_TRACKS}"
         print(msg)
 
         save_pickle(PICKLE_DUPLICATED_TRACKS, track_names_to_repeated_uris)
@@ -138,7 +139,7 @@ def save_pickle(pickle_path: str, data: dict | list):
 
     # Pickle the mapping
     full_path = pathlib.Path(PICKLES_FOLDER) / pickle_path
-    print("Saving pickle to", full_path)
+    print("\tSaving pickle to", full_path)
 
     with open(full_path, "wb") as f:
         pickle.dump(data, f)
@@ -169,15 +170,23 @@ def get_most_frequent_tracks(df: pl.DataFrame) -> list:
         pl.col("track_uri").count().alias("count")
     ).sort("count").reverse()
 
-    most_frequent_dict = most_frequent_tracks.to_dicts()
+    most_frequent_tracks_dicts = most_frequent_tracks.to_dicts()
 
-    return most_frequent_dict
+    return most_frequent_tracks_dicts
+
+def filter_best_tracks(track_infos: list[dict]) -> list[dict]:
+    k_tracks = len(track_infos) * TOP_TRACKS_SAVE_PERCENTILE
+    tracks_to_keep = track_infos[:int(k_tracks)]
+    print("Most frequent songs >")
+    print(f"\tKeeping {len(tracks_to_keep)} most frequent tracks out of {len(track_infos)}")
+    best_3 = tracks_to_keep[:3]
+    print("\t3 most frequent tracks are: ", best_3)
+    return tracks_to_keep
 
 def save_most_frequent_tracks_dict(sorted_most_frequent_dict: list):
     best_percentage = 0.1
     desired_track_count = int(len(sorted_most_frequent_dict) * best_percentage)
     best_tracks = sorted_most_frequent_dict[:desired_track_count]
-
 
     track_list = [track["track_name"] for track in best_tracks]
 
@@ -296,26 +305,12 @@ def calculate_and_save_fp_growth_fast(playlist_dict: dict, min_support = 0.07) -
     print("Songs without recommendations:", songs_without_recommendations)
     end_time = pd.Timestamp.now()
     duration = end_time - start_time
-    print(f"Time elapsed: {duration}")
+    print(f"Time elapsed in rule generation: {duration}")
 
 
     info = f"min_support: {min_support} \tmissing songs: {songs_without_recommendations} \ttime: {duration}"
     runtime_info = (songs_without_recommendations, duration)
     return songs_to_song_sets, info, runtime_info
-
-def recommend_tracks_for_track(songs_to_song_sets: dict, seed_track):
-    if seed_track not in songs_to_song_sets:
-        print(f"Track {seed_track} not found in the song recomendation list.")
-        return set()
-
-    recommendations = songs_to_song_sets[seed_track]
-    # sort dict by value
-    sorted_by_confidence = sorted(recommendations.items(), key=lambda x: x[1], reverse=True)
-
-    recommended = sorted_by_confidence[:best_n_tracks]
-    song_names = [song[0] for song in recommended]
-    return song_names
-
 
 def get_dataset_list():
     if not os.path.exists(DATASET_LIST_FILE):
@@ -399,11 +394,7 @@ def get_next_run_index() -> int:
 def append_dataset_history(dataset_index: int, dataset_file: str):
     file_existed = os.path.exists(DATASET_HISTORY_FILE)
 
-    now_utc = datetime.now(pytz.utc)
-
-    sao_paulo_time = now_utc.astimezone(pytz.timezone("America/Sao_Paulo"))
-
-    sao_paulo_time_str = sao_paulo_time.strftime("%Y-%m-%d %H:%M:%S")
+    sao_paulo_time_str = get_current_time_str()
 
     with open(DATASET_HISTORY_FILE, "a", encoding="utf-8") as f:
         if not file_existed:
@@ -419,7 +410,18 @@ def append_dataset_history(dataset_index: int, dataset_file: str):
     print(f"Appended dataset {dataset_index} ({dataset_file}) to history.")
     print(f"Updated cache file: {cache_file}")
 
+
+def get_current_time_str():
+    now_utc = datetime.now(pytz.utc)
+    sao_paulo_time = now_utc.astimezone(pytz.timezone("America/Sao_Paulo"))
+    sao_paulo_time_str = sao_paulo_time.strftime("%Y-%m-%d %H:%M:%S")
+    return sao_paulo_time_str
+
+
 if __name__ == "__main__":
+
+    print("=== Starting execution on ", get_current_time_str(), " ===")
+
     datasets = get_dataset_list()
 
     new_index = get_next_run_index()
@@ -439,10 +441,9 @@ if __name__ == "__main__":
     map_song_ids_to_song_info(df_tracks)
 
     most_frequent_tracks = get_most_frequent_tracks(df_tracks)
-    save_pickle(BEST_TRACKS_FILE, most_frequent_tracks)
+    most_frequent_tracks_to_save = filter_best_tracks(most_frequent_tracks)
 
-    #TODO save to pickle and read in api server
-    save_most_frequent_tracks_dict(most_frequent_tracks)
+    save_pickle(BEST_TRACKS_FILE, most_frequent_tracks_to_save)
 
     # Pass the selected dataset to the grouping function
     pidToTracksDict = group_tracks_by_playlist_and_generate_homogeneous_data(df_tracks)
@@ -450,7 +451,6 @@ if __name__ == "__main__":
 
     if experiment_supports:
 
-        # Create an empty DataFrame with the required columns
         results_df = pd.DataFrame(columns=["min_support", "songs_without_recommendations", "duration"])
 
         min_supports = np.arange(0.03, 0.2, 0.0025).tolist()
@@ -480,5 +480,5 @@ if __name__ == "__main__":
 
     append_dataset_history(new_index, selected_dataset)
 
-    print("Run complete. Exiting.")
+    print("=== Run complete. Exiting, current time is ", get_current_time_str(), " ===")
     sys.exit(0)

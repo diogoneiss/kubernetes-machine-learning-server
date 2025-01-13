@@ -32,12 +32,14 @@ source = { virtual = "." }
 dependencies = [
     { name = "fastapi", extra = ["standard"] },
     { name = "fastapi-utils", extra = ["all"] },
+    { name = "jinja2" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = ">=0.115.6" },
     { name = "fastapi-utils", extras = ["all"], specifier = ">=0.8.0" },
+    { name = "jinja2", specifier = ">=3.1.5" },
 ]
 
 [[package]]
