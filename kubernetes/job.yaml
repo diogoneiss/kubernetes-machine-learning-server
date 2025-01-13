@@ -36,6 +36,8 @@ spec:
             value: best_tracks.pickle
           - name: DATA_INVALIDATION_FILE
             value: last_execution.txt
+          - name: TOP_TRACKS_SAVE_PERCENTILE
+            value: "0.03"
       restartPolicy: OnFailure
       volumes:
         - name: api-volume
