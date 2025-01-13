@@ -8,6 +8,7 @@ from typing import List, Annotated
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException, Body
+from fastapi.responses import RedirectResponse
 from fastapi_utils.tasks import repeat_every
 
 import os
@@ -32,7 +33,6 @@ logger.info('API is starting up')
 
 load_dotenv()
 
-#from pvc
 BASE_DIR =  pathlib.Path(os.getenv("BASE_DIR", "machine-learning/api-data/"))
 PICKLES_FOLDER = BASE_DIR / os.getenv("PICKLE_DIR", "pickles/")
 K_BEST_TRACKS = int(os.getenv("K_BEST_TRACKS", "10"))
@@ -148,14 +148,8 @@ app.best_tracks = None
 
 @app.get("/", tags=["util"])
 def read_root():
-    print_value = f"Last execution: {app.cache_value}. Total reloads: {app.reload_counter} and current version is {VERSION}"
-
-    songs = recommend_tracks_for_track(["The Motto", "Closer"])
-
-    return {
-        "Data": f"{print_value}",
-        "Songs": songs
-        }
+    response = RedirectResponse(url='/docs#/recommend/get_recommendations_api_recommend__post')
+    return response
 
 class SongRequest(BaseModel):
     songs: List[str]
