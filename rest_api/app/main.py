@@ -7,7 +7,8 @@ app = FastAPI()
 
 @app.get("/")
 def read_root():
-    return {"Hello": f"From: {os.environ.get('HOSTNAME', 'DEFAULT_ENV')}"}
+    print_value = os.environ.get('HOSTNAME', 'DEFAULT_ENV')
+    return {"Hello": f"From: {print_value}"}
 
 @app.post("/api/reload-cache")
 def reload_cache():

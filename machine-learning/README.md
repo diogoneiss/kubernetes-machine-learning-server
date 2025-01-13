@@ -1,0 +1,1 @@
+ docker build -t diogoneiss/machine-learning-service:teste1 .   

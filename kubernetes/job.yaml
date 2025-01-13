@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ml-job
+  labels:
+    jobgroup: jobexample
+spec:
+  template:
+    metadata:
+      name: kubejob
+      labels:
+        jobgroup: jobexample
+    spec:
+      containers:
+      - name: machine-learning-service
+        image: diogoneiss/machine-learning-service:teste1
+      restartPolicy: OnFailure
