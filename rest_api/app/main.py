@@ -139,11 +139,6 @@ tags_metadata = [
         "name": "recommend",
         "description": "Song recommendation service",
     },
-    {
-        "name": "util",
-        "description": "Utility endpoints",
-    }
-
 ]
 app = FastAPI(
     title="Music Recommendation API",
@@ -165,8 +160,8 @@ app.recommendations = None
 app.best_tracks = None
 app.sample_songs = None
 
-@app.get("/test", tags=["util"])
-def read_root():
+@app.get("/test", tags=["util"], include_in_schema=False)
+def redirect_to_doc():
     response = RedirectResponse(url='/docs#/recommend/get_recommendations_api_recommend__post')
     return response
 
@@ -205,7 +200,7 @@ def get_recommendations(request: Annotated[SongRequest, openApiBody]):
     }
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def render_client(request: Request):
     if app.best_tracks is None:
         #sleep for 2 second
