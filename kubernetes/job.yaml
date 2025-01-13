@@ -1,17 +1,27 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ml-job
+  name: ml-job-1
   labels:
-    jobgroup: jobexample
+    jobgroup: ml-job
+  annotations:
+    argocd.argoproj.io/sync-options: Force=true,Replace=true
 spec:
+  ttlSecondsAfterFinished: 600
   template:
     metadata:
       name: kubejob
       labels:
-        jobgroup: jobexample
+        jobgroup: ml-job
     spec:
       containers:
       - name: machine-learning-service
         image: diogoneiss/machine-learning-service:teste1
+        volumeMounts:
+          - mountPath: /api-data
+            name: api-volume
       restartPolicy: OnFailure
+      volumes:
+        - name: api-volume
+          persistentVolumeClaim:
+            claimName: fast-api-claim
