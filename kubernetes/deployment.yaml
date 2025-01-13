@@ -30,7 +30,7 @@ spec:
             memory: 400Mi
         env:
           - name: VERSION
-            value: "V1"
+            value: "V1.0"
           - name: BASE_DIR
             value: /api-data
           - name: PICKLE_DIR
