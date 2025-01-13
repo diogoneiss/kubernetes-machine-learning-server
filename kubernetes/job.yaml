@@ -1,13 +1,13 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ml-job-6
+  name: ml-job-7
   labels:
     jobgroup: ml-job
   annotations:
     argocd.argoproj.io/sync-options: Force=true,Replace=true
 spec:
-  ttlSecondsAfterFinished: 600
+  ttlSecondsAfterFinished: 1200
   template:
     metadata:
       name: kubejob
