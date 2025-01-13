@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ml-job-2
+  name: ml-job-3
   labels:
     jobgroup: ml-job
   annotations:
@@ -20,6 +20,15 @@ spec:
         volumeMounts:
           - mountPath: /api-data
             name: api-volume
+        env:
+          - name: BASE_DIR
+            value: /api-data
+          - name: DATASETS_DIR
+            value: ./datasets
+          - name: REGEX_FILENAME
+            value: 2023_spotify_ds*.csv
+          - name: MIN_SUPPORT
+            value: "0.05"
       restartPolicy: OnFailure
       volumes:
         - name: api-volume
