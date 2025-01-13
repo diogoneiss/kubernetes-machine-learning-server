@@ -5,7 +5,7 @@ import sys
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from typing import List, Annotated
-
+from dotenv import load_dotenv
 from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException, Body
 from fastapi_utils.tasks import repeat_every
@@ -30,10 +30,11 @@ logger.addHandler(consoleHandler)
 
 logger.info('API is starting up')
 
+load_dotenv()
 
 #from pvc
 BASE_DIR =  pathlib.Path(os.getenv("BASE_DIR", "machine-learning/api-data/"))
-
+print("Base dir is ", BASE_DIR)
 PICKLES_FOLDER = BASE_DIR / os.getenv("PICKLE_DIR", "pickles/")
 K_BEST_TRACKS = int(os.getenv("K_BEST_TRACKS", "10"))
 VERSION = os.getenv("VERSION", "V0.1")
@@ -102,7 +103,9 @@ def reload_data_if_required():
     if not is_data_stale() and app.finished_loading:
         logger.info("data is not stale, no need to reload")
         return
+    perform_data_reload()
 
+def perform_data_reload():
     logger.info("Reloading data!")
     app.best_tracks, app.recommendations = read_pickle_dict()
 
@@ -183,7 +186,7 @@ def get_recommendations(request: Annotated[SongRequest, openApiBody]):
 
 @app.post("/api/reload-data", tags=["util"])
 def reload_cache():
-    reload_data_if_required()
+    perform_data_reload()
     return {"status": "Data reloaded"}
 
 

@@ -396,11 +396,6 @@ def get_next_run_index() -> int:
         return BASE_INDEX
 
 def append_dataset_history(dataset_index: int, dataset_file: str):
-    """
-    Appends a new line to the dataset history CSV:
-      time, dataset_index, dataset_file
-    If file doesn't exist, it creates one with a header.
-    """
     file_existed = os.path.exists(DATASET_HISTORY_FILE)
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -475,10 +470,6 @@ if __name__ == "__main__":
     #calculate_and_save_fp_growth(pidToTracksDict)
 
     save_pickle(RECOMMENDATIONS_FILE, songs_to_song_sets)
-
-    seed = 'Gold Digger'
-    suggestions = recommend_tracks_for_track(songs_to_song_sets, seed)
-    print(f"Recommendations when someone listens to '{seed}':", suggestions)
 
     append_dataset_history(new_index, selected_dataset)
 
