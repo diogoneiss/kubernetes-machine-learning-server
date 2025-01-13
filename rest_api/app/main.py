@@ -17,6 +17,8 @@ import os
 
 import logging
 
+
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -45,6 +47,13 @@ BEST_TRACKS_FILE = os.getenv("BEST_TRACKS_FILE", "best_tracks.pickle")
 DATA_INVALIDATION_FILE = os.getenv("DATA_INVALIDATION_FILE", "last_execution.txt")
 
 cache_file = BASE_DIR / DATA_INVALIDATION_FILE
+
+APP_PATH_FROM_ROOT = pathlib.Path(os.getenv("APP_PATH_FROM_ROOT", "rest_api/"))
+
+TEMPLATES_DIR = APP_PATH_FROM_ROOT / "templates/"
+STATIC_DIR = APP_PATH_FROM_ROOT / "static/"
+
+logger.info(f"Will search for templates on {TEMPLATES_DIR}. Contents from current execution directory: {os.listdir()} and contents from APP_PATH_FROM_ROOT: {os.listdir(APP_PATH_FROM_ROOT)}")
 
 def read_pickle_dict():
     BASE_DIR.mkdir(parents=True, exist_ok=True)
@@ -147,10 +156,10 @@ app = FastAPI(
 # list all files in the current directory
 print("Files in current directory: ", os.listdir())
 
-app.mount("/static", StaticFiles(directory="./rest_api/static"), name="static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
-templates = Jinja2Templates(directory="./rest_api/templates")
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 app.reload_counter = 0
 app.cache_value = None
