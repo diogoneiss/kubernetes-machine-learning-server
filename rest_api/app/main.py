@@ -17,8 +17,6 @@ import os
 
 import logging
 
-
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -27,11 +25,6 @@ formatter = logging.Formatter("%(asctime)s [%(processName)s: %(process)d] [%(thr
 consoleHandler = logging.StreamHandler(sys.stdout)
 consoleHandler.setFormatter(logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(message)s'))
 logger.addHandler(consoleHandler)
-
-
-#file_handler = logging.FileHandler("info.log")
-#file_handler.setFormatter(formatter)
-#logger.addHandler(file_handler)
 
 logger.info('API is starting up')
 
@@ -106,14 +99,8 @@ def is_data_stale():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Load the ML model
-    #print("Base dir is ", BASE_DIR)
-
-    #app.best_tracks, app.recommendations = read_pickle_dict()
-    #app.finished_loading = True
     await data_reload_handler()
     yield
-    # Clean up the ML models and release the resources
     logger.info("Exiting...")
 
 @repeat_every(seconds=60*POLLING_WAIT_IN_MINUTES)
@@ -203,11 +190,10 @@ def get_recommendations(request: Annotated[SongRequest, openApiBody]):
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def render_client(request: Request):
     if app.best_tracks is None:
-        #sleep for 2 second
+        logger.info("Best tracks not loaded, waiting for data to be loaded")
         await asyncio.sleep(2)
-    # random string as hash
+
     random_song = random.choice(app.best_tracks)
-    logger.info("Random song as seed for test is", random_song)
     seed_tracks = [random_song["track_name"]]
 
     tracks = perform_static_recommendation(seed_tracks)
