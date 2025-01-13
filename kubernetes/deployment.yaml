@@ -37,6 +37,8 @@ spec:
             value: /api-data/
           - name: PICKLE_DIR
             value: pickles/
+          - name: APP_PATH_FROM_ROOT
+            value: /app
           - name: RECOMMENDATIONS_FILE
             value: recommendations.pickle
           - name: BEST_TRACKS_FILE
