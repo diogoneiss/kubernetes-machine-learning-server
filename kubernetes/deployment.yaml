@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: fast-api
-        image: diogoneiss/cloud-computing:teste1
+        image: diogoneiss/cloud-computing:latest
         imagePullPolicy: Always
         volumeMounts:
           - mountPath: /api-data

@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: fast-api
+  name: fast-api-service
 spec:
   type: NodePort
   selector:
