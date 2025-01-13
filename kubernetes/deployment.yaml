@@ -29,8 +29,20 @@ spec:
           limits:
             memory: 400Mi
         env:
-          - name: ENV
-            value: "yaml value"
+          - name: VERSION
+            value: "V1"
+          - name: BASE_DIR
+            value: /api-data
+          - name: PICKLE_DIR
+            value: /pickles
+          - name: RECOMMENDATIONS_FILE
+            value: recommendations.pickle
+          - name: BEST_TRACKS_FILE
+            value: best_tracks.pickle
+          - name: DATA_INVALIDATION_FILE
+            value: last_execution.txt
+          - name: K_BEST_TRACKS
+            value: "10"
       volumes:
         - name: api-volume
           persistentVolumeClaim:

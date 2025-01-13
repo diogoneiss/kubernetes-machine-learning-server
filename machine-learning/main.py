@@ -30,6 +30,10 @@ PICKLE_ARTISTS_FILE = "artistsMapping.pickle"
 PICKLE_TRACK_ID_TO_TRACK_INFO = "trackIdsToInfo.pickle"
 PICKLE_DUPLICATED_TRACKS = "trackNameToRepeatedUris.pickle"
 
+RECOMMENDATIONS_FILE =os.getenv("RECOMMENDATIONS_FILE", "recommendations.pickle")
+BEST_TRACKS_FILE = os.getenv("BEST_TRACKS_FILE", "best_tracks.pickle")
+DATA_INVALIDATION_FILE = os.getenv("DATA_INVALIDATION_FILE", "last_execution.txt")
+
 REGEX_FILENAME = os.getenv("REGEX_FILENAME", "2023_spotify_ds*.csv")
 
 BASE_INDEX = 1
@@ -127,7 +131,7 @@ def map_song_ids_to_song_info(df: pl.DataFrame) -> dict:
     return track_mapping
 
 
-def save_pickle(pickle_path: str, data: dict):
+def save_pickle(pickle_path: str, data: dict | list):
 
     pathlib.Path(PICKLES_FOLDER).mkdir(parents=True, exist_ok=True)
 
@@ -398,17 +402,21 @@ def append_dataset_history(dataset_index: int, dataset_file: str):
     If file doesn't exist, it creates one with a header.
     """
     file_existed = os.path.exists(DATASET_HISTORY_FILE)
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     with open(DATASET_HISTORY_FILE, "a", encoding="utf-8") as f:
         if not file_existed:
             f.write("time,dataset_index,dataset_file\n")
 
-        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         line = f"{now_str},{dataset_index},{dataset_file}\n"
         f.write(line)
 
-    print(f"Appended dataset {dataset_index} ({dataset_file}) to history.")
+    cache_file = BASE_DIR / DATA_INVALIDATION_FILE
+    with open(cache_file, "w") as f:
+        f.write(now_str)
 
+    print(f"Appended dataset {dataset_index} ({dataset_file}) to history.")
+    print(f"Updated cache file: {cache_file}")
 if __name__ == "__main__":
     datasets = get_dataset_list()
 
@@ -429,6 +437,7 @@ if __name__ == "__main__":
     map_song_ids_to_song_info(df_tracks)
 
     most_frequent_tracks = get_most_frequent_tracks(df_tracks)
+    save_pickle(BEST_TRACKS_FILE, most_frequent_tracks)
 
     #TODO save to pickle and read in api server
     save_most_frequent_tracks_dict(most_frequent_tracks)
@@ -465,6 +474,7 @@ if __name__ == "__main__":
     songs_to_song_sets, _, _ = calculate_and_save_fp_growth_fast(pidToTracksDict, MIN_SUPPORT)
     #calculate_and_save_fp_growth(pidToTracksDict)
 
+    save_pickle(RECOMMENDATIONS_FILE, songs_to_song_sets)
 
     seed = 'Gold Digger'
     suggestions = recommend_tracks_for_track(songs_to_song_sets, seed)

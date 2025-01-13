@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ml-job-3
+  name: ml-job-4
   labels:
     jobgroup: ml-job
   annotations:
@@ -17,6 +17,7 @@ spec:
       containers:
       - name: machine-learning-service
         image: diogoneiss/machine-learning-service:latest
+        imagePullPolicy: Always
         volumeMounts:
           - mountPath: /api-data
             name: api-volume
@@ -29,6 +30,12 @@ spec:
             value: 2023_spotify_ds*.csv
           - name: MIN_SUPPORT
             value: "0.05"
+          - name: RECOMMENDATIONS_FILE
+            value: recommendations.pickle
+          - name: BEST_TRACKS_FILE
+            value: best_tracks.pickle
+          - name: DATA_INVALIDATION_FILE
+            value: last_execution.txt
       restartPolicy: OnFailure
       volumes:
         - name: api-volume
