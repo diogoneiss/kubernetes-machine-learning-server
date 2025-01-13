@@ -25,7 +25,7 @@ spec:
           - name: BASE_DIR
             value: /api-data
           - name: DATASETS_DIR
-            value: ./datasets
+            value: /api-data/datasets
           - name: REGEX_FILENAME
             value: 2023_spotify_ds*.csv
           - name: MIN_SUPPORT

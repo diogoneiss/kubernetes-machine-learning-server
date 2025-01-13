@@ -1,0 +1,12 @@
+project: diogoneiss-project
+source:
+  repoURL: https://github.com/diogoneiss/kubernetes-machine-learning-server
+  path: ./kubernetes/
+  targetRevision: HEAD
+destination:
+  server: https://kubernetes.default.svc
+  namespace: diogoneiss
+syncPolicy:
+  automated:
+    prune: true
+    selfHeal: true
