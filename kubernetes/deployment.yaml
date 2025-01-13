@@ -43,6 +43,8 @@ spec:
             value: last_execution.txt
           - name: K_BEST_TRACKS
             value: "10"
+          - name: POLLING_WAIT_IN_MINUTES
+            value: "5"
       volumes:
         - name: api-volume
           persistentVolumeClaim:

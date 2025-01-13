@@ -37,7 +37,7 @@ BASE_DIR =  pathlib.Path(os.getenv("BASE_DIR", "machine-learning/api-data/"))
 PICKLES_FOLDER = BASE_DIR / os.getenv("PICKLE_DIR", "pickles/")
 K_BEST_TRACKS = int(os.getenv("K_BEST_TRACKS", "10"))
 VERSION = os.getenv("VERSION", "V0.1")
-
+POLLING_WAIT_IN_MINUTES = int(os.getenv("POLLING_WAIT_IN_MINUTES", "1"))
 RECOMMENDATIONS_FILE =os.getenv("RECOMMENDATIONS_FILE", "recommendations.pickle")
 BEST_TRACKS_FILE = os.getenv("BEST_TRACKS_FILE", "best_tracks.pickle")
 DATA_INVALIDATION_FILE = os.getenv("DATA_INVALIDATION_FILE", "last_execution.txt")
@@ -94,12 +94,12 @@ async def lifespan(app: FastAPI):
     # Clean up the ML models and release the resources
     logger.info("Exiting...")
 
-@repeat_every(seconds=60)
+@repeat_every(seconds=60*POLLING_WAIT_IN_MINUTES)
 def data_reload_handler():
     reload_data_if_required()
 
 def reload_data_if_required():
-    if not is_data_stale():
+    if not is_data_stale() and app.finished_loading:
         logger.info("data is not stale, no need to reload")
         return
 
@@ -108,6 +108,7 @@ def reload_data_if_required():
 
     app.reload_counter += 1
     logger.info(f"Finished reloading, should reflect changes. Data was reloaded {app.reload_counter} times")
+    app.finished_loading = True
 
 tags_metadata = [
     {
@@ -131,7 +132,7 @@ app = FastAPI(
 
 app.reload_counter = 0
 app.cache_value = None
-
+app.finished_loading = False
 @app.get("/", tags=["util"])
 def read_root():
     print_value = f"Last execution: {app.cache_value}. Total reloads: {app.reload_counter} and current version is {VERSION}"
@@ -206,6 +207,10 @@ def perform_static_recommendation(seed_tracks: list[str]):
     return songs
 
 def recommend_tracks_for_track(seed_tracks: list[str]):
+    if not app.recommendations or True:
+        logger.error("Recommendations not loaded, calling pickle reload")
+        reload_data_if_required()
+        return ["No recommendations available at the moment"]
     songs_to_song_sets = app.recommendations
 
     if not songs_to_song_sets:
