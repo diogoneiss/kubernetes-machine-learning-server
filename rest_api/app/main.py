@@ -50,11 +50,11 @@ def read_pickle_dict():
 
     best_tracks_path = PICKLES_FOLDER / BEST_TRACKS_FILE
 
-    print("Best tracks path is ", best_tracks_path)
-
-    print("Files in current directory: ", os.listdir())
-
-    print("Files in base dir: ", os.listdir(BASE_DIR))
+    # print("Best tracks path is ", best_tracks_path)
+    #
+    # print("Files in current directory: ", os.listdir())
+    #
+    # print("Files in base dir: ", os.listdir(BASE_DIR))
 
     if not best_tracks_path.exists():
         logger.error(f"Best tracks file not found at {best_tracks_path}")
@@ -76,6 +76,7 @@ def read_pickle_dict():
 
 def is_data_stale():
     if not cache_file.exists():
+        logger.info("Cache file does not exist")
         return True
 
     current_value = app.cache_value
@@ -84,6 +85,7 @@ def is_data_stale():
         last_value = f.read()
 
     if current_value != last_value:
+        logger.info(f"Data is stale, current value is {current_value} and last value was {last_value}")
         app.cache_value = last_value
         return True
 
@@ -93,10 +95,10 @@ def is_data_stale():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Load the ML model
-    print("Base dir is ", BASE_DIR)
+    #print("Base dir is ", BASE_DIR)
 
-    app.best_tracks, app.recommendations = read_pickle_dict()
-    app.finished_loading = True
+    #app.best_tracks, app.recommendations = read_pickle_dict()
+    #app.finished_loading = True
     await data_reload_handler()
     yield
     # Clean up the ML models and release the resources
@@ -174,11 +176,9 @@ openApiBody = Body(
 
 @app.post("/api/recommend/", tags=["recommend"])
 def get_recommendations(request: Annotated[SongRequest, openApiBody]):
-    # Validate the input is not empty
     if not request.songs:
         raise HTTPException(status_code=400, detail="The songs list cannot be empty.")
 
-    # Call the recommendation function
     recommended_songs = recommend_tracks_for_track(request.songs)
 
     return {
@@ -188,10 +188,10 @@ def get_recommendations(request: Annotated[SongRequest, openApiBody]):
         "version": VERSION
     }
 
-@app.post("/api/reload-data", tags=["util"])
-def reload_cache():
-    perform_data_reload()
-    return {"status": "Data reloaded"}
+# @app.post("/api/reload-data", tags=["util"])
+# def reload_cache():
+#     perform_data_reload()
+#     return {"status": "Data reloaded"}
 
 
 def perform_static_recommendation(seed_tracks: list[str]):

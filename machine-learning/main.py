@@ -7,6 +7,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 import polars as pl
+import pytz
 from dotenv import load_dotenv
 from fpgrowth_py import fpgrowth
 from mlxtend.frequent_patterns import fpgrowth as fpgrowth_one_hot
@@ -397,21 +398,27 @@ def get_next_run_index() -> int:
 
 def append_dataset_history(dataset_index: int, dataset_file: str):
     file_existed = os.path.exists(DATASET_HISTORY_FILE)
-    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    now_utc = datetime.now(pytz.utc)
+
+    sao_paulo_time = now_utc.astimezone(pytz.timezone("America/Sao_Paulo"))
+
+    sao_paulo_time_str = sao_paulo_time.strftime("%Y-%m-%d %H:%M:%S")
 
     with open(DATASET_HISTORY_FILE, "a", encoding="utf-8") as f:
         if not file_existed:
             f.write("time,dataset_index,dataset_file\n")
 
-        line = f"{now_str},{dataset_index},{dataset_file}\n"
+        line = f"{sao_paulo_time_str},{dataset_index},{dataset_file}\n"
         f.write(line)
 
     cache_file = BASE_DIR / DATA_INVALIDATION_FILE
     with open(cache_file, "w") as f:
-        f.write(now_str)
+        f.write(sao_paulo_time_str)
 
     print(f"Appended dataset {dataset_index} ({dataset_file}) to history.")
     print(f"Updated cache file: {cache_file}")
+
 if __name__ == "__main__":
     datasets = get_dataset_list()
 

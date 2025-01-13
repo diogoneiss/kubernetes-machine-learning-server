@@ -728,6 +728,7 @@ dependencies = [
     { name = "polars" },
     { name = "pyarrow" },
     { name = "python-dotenv" },
+    { name = "pytz" },
     { name = "rich" },
     { name = "scikit-learn" },
 ]
@@ -741,6 +742,7 @@ requires-dist = [
     { name = "polars", specifier = ">=1.19.0" },
     { name = "pyarrow", specifier = ">=18.1.0" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
+    { name = "pytz", specifier = ">=2024.2" },
     { name = "rich", specifier = ">=13.9.4" },
     { name = "scikit-learn", specifier = ">=1.6.1" },
 ]
