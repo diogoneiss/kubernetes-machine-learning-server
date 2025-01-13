@@ -1,54 +1,19 @@
-# Tutorial source for building FastAPI application and deploying it to Kubernetes
-Video: https://www.youtube.com/watch?v=XltFOyGanYE
+## Arquitetura
 
+Foi desenvolvido um serviço FastAPI vinculado ao PVC. Um arquivo é utilizado para polling de mudanças, permitindo verificar se as regras devem ser recarregadas periodicamente.
 
-## Useful commands
-docker build -t diogoneiss/cloud-computing:teste1 .  
+Para geração das regras foi feito um job simples, executado periodicamente. Cada execução usa um dataset diferente do utilizado na última vez, gera os arquivos necessários e grava no PVC.
 
-docker push diogoneiss/cloud-computing:teste1   
+## Playlist Rules Generator - Machine learning Job
 
+Script python capaz de gerar as regras. Coloquei os datasets no git para facilitar a execução do job localmente.
 
-## Python Application
+### Datasets
 
-### Create a virtual environment:
-```bash
-python3 -m venv ./venv
-source ./venv/bin/activate
-```
+O container **NÃO** possui os datasets dentro, eles estão fora do diretório do serviço. Para rodar no kubernetes, certifique-se que eles estão dentro do PVC e ajuste o deployment para apontar para o diretório.
 
-### Install the Dependencies
-```bash
-pip install -r requirements.txt
-```
+### Execução
 
+Tudo que o serviço precisa é das variáveis de ambiente apontando para diretórios válidos, todo o resto será gerado.
 
-### Start the App
-```bash
-uvicorn main:app --reload
-```
-
-## Containerize the Application
-
-```bash
-docker build -t <IMAGE_TAG> .
-
-docker push -t <IMAGE_TAG>
-```
-
-## Deploy to Kubernetess:
-
-```bash
-export KUBECONFIG=<PATH_TO_KUBE_CONFIG>
-
-kubectl apply -f .
-
-kubectl get pods 
-```
-
-### Validation and Debugging
-
-```bash
-kubectl port-forward <POD_NAME> 8080:80
-
-kubectl exec -it <POD_NAME> -- bash
-```
+O job executa apenas uma vez, e é removido apos o tempo especificado no TTL. Como o ArgoCD foi configurado para sincronizar esse job com replace, ele será reexecutado, se tornando então um cron job.

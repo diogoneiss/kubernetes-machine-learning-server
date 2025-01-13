@@ -20,8 +20,8 @@ load_dotenv()
 MIN_SUPPORT = float(os.getenv("MIN_SUPPORT", 0.05))
 
 
-BASE_DIR =  pathlib.Path(os.getenv("BASE_DIR", "datasets/"))
-DATASETS_DIR =  pathlib.Path(os.getenv("DATASETS_DIR", "datasets/"))
+BASE_DIR =  pathlib.Path(os.getenv("BASE_DIR", "../datasets/"))
+DATASETS_DIR =  pathlib.Path(os.getenv("DATASETS_DIR", "../datasets/"))
 
 PICKLES_FOLDER = BASE_DIR / os.getenv("PICKLES_FOLDER", "pickles/")
 DATASET_LIST_FILE = BASE_DIR / "datasets_list.txt"
