@@ -1,0 +1,14 @@
+.git
+.gitignore
+
+.docker
+
+*/__pycache__/
+**/__pycache__/
+
+.env/
+.venv/
+venv/
+
+data/
+pickles/
