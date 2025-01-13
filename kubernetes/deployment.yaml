@@ -50,7 +50,7 @@ spec:
           - name: POLLING_WAIT_IN_MINUTES
             value: "5"
           - name: ARGO_CD_SYNC_BUSTER
-            value: "4"
+            value: "5"
       volumes:
         - name: api-volume
           persistentVolumeClaim:
