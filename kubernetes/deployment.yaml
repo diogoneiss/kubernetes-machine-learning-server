@@ -4,6 +4,8 @@ metadata:
   name: fast-api
   labels:
     app: fast-api
+  annotations:
+    teste: teste
 spec:
   replicas: 2
   selector:
