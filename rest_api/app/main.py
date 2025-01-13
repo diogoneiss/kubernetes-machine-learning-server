@@ -34,7 +34,6 @@ load_dotenv()
 
 #from pvc
 BASE_DIR =  pathlib.Path(os.getenv("BASE_DIR", "machine-learning/api-data/"))
-print("Base dir is ", BASE_DIR)
 PICKLES_FOLDER = BASE_DIR / os.getenv("PICKLE_DIR", "pickles/")
 K_BEST_TRACKS = int(os.getenv("K_BEST_TRACKS", "10"))
 VERSION = os.getenv("VERSION", "V0.1")
@@ -56,6 +55,10 @@ def read_pickle_dict():
     print("Files in current directory: ", os.listdir())
 
     print("Files in base dir: ", os.listdir(BASE_DIR))
+
+    if not best_tracks_path.exists():
+        logger.error(f"Best tracks file not found at {best_tracks_path}")
+        raise ValueError(f"Best tracks file not found at {best_tracks_path}")
 
     with open(best_tracks_path, "rb") as f:
         best_tracks = pickle.load(f)
@@ -90,6 +93,10 @@ def is_data_stale():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Load the ML model
+    print("Base dir is ", BASE_DIR)
+
+    app.best_tracks, app.recommendations = read_pickle_dict()
+    app.finished_loading = True
     await data_reload_handler()
     yield
     # Clean up the ML models and release the resources
@@ -136,6 +143,9 @@ app = FastAPI(
 app.reload_counter = 0
 app.cache_value = None
 app.finished_loading = False
+app.recommendations = None
+app.best_tracks = None
+
 @app.get("/", tags=["util"])
 def read_root():
     print_value = f"Last execution: {app.cache_value}. Total reloads: {app.reload_counter} and current version is {VERSION}"
@@ -210,7 +220,7 @@ def perform_static_recommendation(seed_tracks: list[str]):
     return songs
 
 def recommend_tracks_for_track(seed_tracks: list[str]):
-    if not app.recommendations or True:
+    if not app.recommendations:
         logger.error("Recommendations not loaded, calling pickle reload")
         reload_data_if_required()
         return ["No recommendations available at the moment"]
