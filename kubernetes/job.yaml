@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: ml-job-1
+  name: ml-job-2
   labels:
     jobgroup: ml-job
   annotations:

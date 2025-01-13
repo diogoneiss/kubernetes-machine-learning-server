@@ -18,24 +18,24 @@ load_dotenv()
 # Load environment variables
 MIN_SUPPORT = float(os.getenv("MIN_SUPPORT", 0.05))
 
-BASE_DIR = os.getenv("BASE_DIR", "./datasets")
-DATASETS_DIR = os.getenv("DATASETS_DIR", "./datasets")
 
-PICKLES_FOLDER = os.getenv("PICKLES_FOLDER", "./pickles")
+BASE_DIR =  pathlib.Path(os.getenv("BASE_DIR", "datasets/"))
+DATASETS_DIR =  pathlib.Path(os.getenv("DATASETS_DIR", "datasets/"))
 
-REGEX_FILENAME = os.getenv("REGEX_FILENAME", "2023_spotify_ds*.csv")
-
-DATASET_LIST_FILE = f"{BASE_DIR}/datasets_list.txt"
+PICKLES_FOLDER = BASE_DIR / os.getenv("PICKLES_FOLDER", "pickles/")
+DATASET_LIST_FILE = BASE_DIR / "datasets_list.txt"
+DATASET_HISTORY_FILE =  BASE_DIR / "dataset_history.csv"
 
 PICKLE_ARTISTS_FILE = "artistsMapping.pickle"
 PICKLE_TRACK_ID_TO_TRACK_INFO = "trackIdsToInfo.pickle"
 PICKLE_DUPLICATED_TRACKS = "trackNameToRepeatedUris.pickle"
 
+REGEX_FILENAME = os.getenv("REGEX_FILENAME", "2023_spotify_ds*.csv")
+
 BASE_INDEX = 1
 
 DROP_COLUMNS = ["duration_ms"]
 FP_GROWTH_DROP_COLUMNS = ["track_uri", "album_name", "artist_uri"]
-
 
 sample_ratio = 1
 best_n_tracks = 5
@@ -133,8 +133,11 @@ def save_pickle(pickle_path: str, data: dict):
 
     # Pickle the mapping
     full_path = pathlib.Path(PICKLES_FOLDER) / pickle_path
+    print("Saving pickle to", full_path)
+
     with open(full_path, "wb") as f:
         pickle.dump(data, f)
+
 
 def clean_df(df: pl.DataFrame) -> pl.DataFrame:
     df = df.drop(DROP_COLUMNS)
@@ -324,26 +327,24 @@ def read_dataset():
     return datasets
 
 def write_dataset_and_reset_index():
-    base_dir_path = pathlib.Path(DATASETS_DIR)
-    base_dir_path.mkdir(parents=True, exist_ok=True)
+    DATASETS_DIR.mkdir(parents=True, exist_ok=True)
+    BASE_DIR.mkdir(parents=True, exist_ok=True)
 
-    dataset_paths = sorted(base_dir_path.glob(REGEX_FILENAME))
+    dataset_paths = sorted(DATASETS_DIR.glob(REGEX_FILENAME))
 
     datasets = [str(p.as_posix()) for p in dataset_paths]
 
     if not datasets:
         raise FileNotFoundError("No datasets found with pattern. Please check your environment setup.")
 
-    list_file_path = pathlib.Path(DATASET_LIST_FILE)
-    with list_file_path.open("w", encoding="utf-8") as f:
+    with DATASET_LIST_FILE.open("w", encoding="utf-8") as f:
         for dataset in datasets:
             f.write(f"{dataset}\n")
 
-    print(f"Datasets written to {list_file_path}")
+    print(f"Datasets written to {DATASET_LIST_FILE.as_posix()}")
 
     return datasets
 
-DATASET_HISTORY_FILE = "dataset_history.csv"
 
 def read_history_csv() -> list:
     """
